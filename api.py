@@ -73,6 +73,10 @@ class UnlimitedAIClient:
 
 client = UnlimitedAIClient()
 
+@app.route("/")
+def home():
+    return "API está rodando com sucesso! 🚀"
+
 @app.route("/api/chat", methods=["POST"])
 def chat():
     auth_key = request.headers.get("Authorization")
