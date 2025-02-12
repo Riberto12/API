@@ -10,7 +10,7 @@ app = Flask(__name__)
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
 
 # Chaves de acesso válidas (pode ser substituído por um banco de dados)
-ACCESS_KEYS = {"chave_secreta_123"}
+ACCESS_KEYS = set(os.getenv("ACCESS_KEYS", "").split(","))
 
 class UnlimitedAIClient:
     def __init__(self, base_url="https://unlimitedai.org"):
