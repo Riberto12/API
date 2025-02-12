@@ -1,5 +1,5 @@
 from flask import Flask, request, jsonify
-import requests
+import cloudscraper
 import json
 import logging
 import os
@@ -15,10 +15,11 @@ ACCESS_KEYS = set(os.getenv("ACCESS_KEYS", "").split(","))
 class UnlimitedAIClient:
     def __init__(self, base_url="https://unlimitedai.org"):
         self.base_url = base_url.rstrip("/")
-        self.session = requests.Session()
+        # Utiliza cloudscraper em vez de requests.Session()
+        self.scraper = cloudscraper.create_scraper()
         self.ajax_url = f"{self.base_url}/wp-admin/admin-ajax.php"
         
-        # Cabeçalhos necessários para a requisição, conforme o script original
+        # Cabeçalhos necessários para simular uma requisição de navegador
         self.common_headers = {
             "accept": "*/*",
             "accept-language": "pt-BR,pt;q=0.9,en;q=0.8,en-GB;q=0.7,en-US;q=0.6",
@@ -31,7 +32,7 @@ class UnlimitedAIClient:
             "content-type": "application/x-www-form-urlencoded",
         })
 
-        # Parâmetros fixos (verifique se esses valores ainda são válidos)
+        # Parâmetros fixos (confira se esses valores ainda são válidos)
         self.wpnonce = "bf53d5e160"
         self.post_id = "18"
         self.chatbot_identity = "shortcode"
@@ -51,7 +52,7 @@ class UnlimitedAIClient:
             "url": self.base_url,
             "action": "wpaicg_chat_shortcode_message",
             "message": message,
-            "bot_id": "0",  # Incluído conforme o código que está funcionando
+            "bot_id": "0",  # Incluído conforme o código original que funciona
             "chatbot_identity": self.chatbot_identity,
             "wpaicg_chat_client_id": self.wpaicg_chat_client_id,
             "wpaicg_chat_history": json.dumps(self.chat_history),
@@ -59,15 +60,12 @@ class UnlimitedAIClient:
         }
         
         try:
-            response = self.session.post(self.ajax_url, headers=self.ajax_headers, data=payload, timeout=10)
+            response = self.scraper.post(self.ajax_url, headers=self.ajax_headers, data=payload, timeout=10)
             response.raise_for_status()
             return self._extract_response_text(response.text)
-        except requests.exceptions.HTTPError as err:
-            logging.error(f"Erro HTTP ao enviar mensagem: {err} - Resposta: {response.text}")
-            return f"Erro HTTP: {err}"
         except Exception as e:
-            logging.error(f"Erro inesperado ao enviar mensagem: {e}")
-            return "Erro ao processar a resposta."
+            logging.error(f"Erro ao enviar mensagem: {e} - Resposta: {response.text if 'response' in locals() else 'Sem resposta'}")
+            return f"Erro HTTP: {e}"
 
     def _extract_response_text(self, response_text):
         """ Processa a resposta removendo trechos desnecessários e reconstruindo a mensagem da IA """
@@ -105,5 +103,6 @@ def chat():
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000)
+
 
 
