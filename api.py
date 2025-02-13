@@ -3,10 +3,10 @@ import requests
 import json
 import logging
 import os
-from bs4 import BeautifulSoup
 
 app = Flask(__name__)
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
+
 ACCESS_KEYS = set(os.getenv("ACCESS_KEYS", "").split(","))
 
 class UnlimitedAIClient:
@@ -35,16 +35,7 @@ class UnlimitedAIClient:
         self.wpaicg_chat_client_id = "a5UlxWnSOp"
         self.default_chat_id = "2149"
         self.chat_history = []
-        self.wpnonce = self.fetch_nonce()
-
-    def fetch_nonce(self):
-        response = self.session.get(f"{self.base_url}/", headers=self.common_headers)
-        response.raise_for_status()
-        soup = BeautifulSoup(response.text, 'html.parser')
-        nonce_input = soup.find("input", {"name": "_wpnonce"})
-        if nonce_input:
-            return nonce_input["value"]
-        raise ValueError("Não foi possível encontrar o _wpnonce.")
+        self.wpnonce = "bf53d5e160"  # Valor fixo de wpnonce
 
     def send_message(self, message):
         self.chat_history.append({"text": f"Human: {message}"})
