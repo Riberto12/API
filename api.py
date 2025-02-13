@@ -59,29 +59,47 @@ class UnlimitedAIClient:
             "wpaicg_chat_history": json.dumps(self.chat_history),
             "chat_id": self.default_chat_id
         }
+
+        # Log de payload antes de enviar
+        logging.info(f"Enviando payload: {json.dumps(payload, indent=2)}")
         
         try:
             response = self.session.post(self.ajax_url, headers=self.ajax_headers, data=payload, timeout=10)
+            
+            # Verificando o status da resposta
+            logging.info(f"Status code da resposta: {response.status_code}")
             response.raise_for_status()
+
+            # Log da resposta do servidor
+            logging.info(f"Resposta do servidor: {response.text}")
+            
+            # Extração aprimorada de texto da resposta fragmentada
             return self._extract_response_text(response.text)
-        except Exception as e:
-            logging.error("Erro ao enviar mensagem: %s", e)
-            return "Erro ao processar a resposta."
+        except requests.exceptions.RequestException as e:
+            logging.error(f"Erro na requisição: {e}")
+            return f"Erro ao processar a resposta: {e}"
     
     def _extract_response_text(self, response_text):
         """ Filtra os dados JSON e reconstrói a resposta da IA """
         lines = response_text.split("\n")
         message = ""
+
         for line in lines:
             if line.startswith("data:"):
                 try:
                     data = json.loads(line[6:])  # Remove "data:" e converte para JSON
                     delta = data.get("choices", [{}])[0].get("delta", {})
                     if "content" in delta:
-                        message += delta["content"]
+                        message += delta["content"]  # Concatena as partes da mensagem
                 except json.JSONDecodeError:
+                    logging.warning(f"Erro ao processar a linha: {line}")
                     continue
-        return message.strip() if message else "Resposta não encontrada."
+        
+        # Verificação se a mensagem foi construída corretamente
+        if not message:
+            message = "Resposta não encontrada."
+        
+        return message.strip()
 
 client = UnlimitedAIClient()
 
