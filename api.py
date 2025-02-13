@@ -1,4 +1,4 @@
-from flask import Flask, request, jsonify
+from flask import Flask, request, Response
 import requests
 import json
 import logging
@@ -93,16 +93,15 @@ def home():
 def chat():
     auth_key = request.headers.get("Authorization")
     if not auth_key or auth_key != "sua_chave_de_acesso_aqui":
-        return jsonify({"error": "Acesso não autorizado."}), 403
+        return Response("Acesso não autorizado.", status=403, mimetype="text/plain")
 
     data = request.get_json()
     if not data or "message" not in data:
-        return jsonify({"error": "Mensagem não fornecida."}), 400
+        return Response("Mensagem não fornecida.", status=400, mimetype="text/plain")
 
     response = client.send_message(data["message"])
-    return jsonify({"response": response})
+    return Response(response, mimetype="text/plain")
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=10000)
-
 
