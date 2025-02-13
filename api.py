@@ -73,7 +73,6 @@ class UnlimitedAIClient:
             # Log da resposta do servidor
             logging.info(f"Resposta do servidor: {response.text}")
             
-            # Extração aprimorada de texto da resposta fragmentada
             return self._extract_response_text(response.text)
         except requests.exceptions.RequestException as e:
             logging.error(f"Erro na requisição: {e}")
@@ -83,23 +82,16 @@ class UnlimitedAIClient:
         """ Filtra os dados JSON e reconstrói a resposta da IA """
         lines = response_text.split("\n")
         message = ""
-
         for line in lines:
             if line.startswith("data:"):
                 try:
                     data = json.loads(line[6:])  # Remove "data:" e converte para JSON
                     delta = data.get("choices", [{}])[0].get("delta", {})
                     if "content" in delta:
-                        message += delta["content"]  # Concatena as partes da mensagem
+                        message += delta["content"]
                 except json.JSONDecodeError:
-                    logging.warning(f"Erro ao processar a linha: {line}")
                     continue
-        
-        # Verificação se a mensagem foi construída corretamente
-        if not message:
-            message = "Resposta não encontrada."
-        
-        return message.strip()
+        return message.strip() if message else "Resposta não encontrada."
 
 client = UnlimitedAIClient()
 
